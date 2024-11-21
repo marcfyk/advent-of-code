@@ -1,0 +1,5 @@
+# input files for puzzles.
+/**/input
+
+# build files from dune.
+/**/_build/
