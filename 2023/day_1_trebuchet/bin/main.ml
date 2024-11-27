@@ -36,26 +36,18 @@ let does_prefix_match index string prefix =
   let prefix_length = String.length prefix in
   if str_length - index < prefix_length
   then false
-  else (
-    let str_seq =
-      Sequence.init prefix_length ~f:(fun i -> String.get string (index + i))
-    in
-    let prefix_seq = String.to_sequence prefix in
-    Sequence.zip str_seq prefix_seq
-    |> Sequence.for_all ~f:(fun (c1, c2) -> Char.equal c1 c2))
+  else
+    Sequence.init prefix_length ~f:(fun i -> Char.equal string.[index + i] prefix.[i])
+    |> Sequence.for_all ~f:Fn.id
 ;;
 
 let does_suffix_match index string suffix =
   let suffix_length = String.length suffix in
   if index + 1 < suffix_length
   then false
-  else (
-    let str_seq =
-      Sequence.init suffix_length ~f:(fun i -> String.get string (index - i))
-    in
-    let suffix_seq = String.to_sequence suffix in
-    Sequence.zip str_seq suffix_seq
-    |> Sequence.for_all ~f:(fun (c1, c2) -> Char.equal c1 c2))
+  else
+    Sequence.init suffix_length ~f:(fun i -> Char.equal string.[index - i] suffix.[i])
+    |> Sequence.for_all ~f:Fn.id
 ;;
 
 let get_first_number line =
@@ -92,13 +84,15 @@ let get_last_number line =
   find (String.length line - 1)
 ;;
 
+let compute_calibration_value first last = (first * 10) + last
+
 let get_calibration_value line =
   match get_first_number line with
   | None -> None
   | Some first ->
     (match get_last_number line with
      | None -> None
-     | Some last -> Some ((first * 10) + last))
+     | Some last -> Some (compute_calibration_value first last))
 ;;
 
 let () =
