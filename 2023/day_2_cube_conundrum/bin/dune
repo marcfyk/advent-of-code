@@ -1,4 +1,5 @@
 (executable
  (public_name day_2_cube_conundrum)
  (name main)
+ (modules main game parser)
  (libraries day_2_cube_conundrum base stdio))
