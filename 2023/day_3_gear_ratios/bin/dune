@@ -1,0 +1,5 @@
+(executable
+ (public_name day_3_gear_ratios)
+ (name main)
+ (modules main game)
+ (libraries day_3_gear_ratios base stdio))
