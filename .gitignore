@@ -6,3 +6,4 @@
 
 # build files from zig builds.
 /**/zig-out/
+/**/.zig-cache/
