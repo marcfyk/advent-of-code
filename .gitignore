@@ -3,3 +3,6 @@
 
 # build files from dune.
 /**/_build/
+
+# build files from zig builds.
+/**/zig-out/
