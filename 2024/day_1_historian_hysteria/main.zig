@@ -100,7 +100,7 @@ const LocationLists = struct {
     }
 };
 
-fn parse_args() ![]const u8 {
+fn parseArgs() ![]const u8 {
     var args = std.process.args();
     _ = args.skip();
     const input_arg = args.next();
@@ -117,7 +117,7 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const stdout = std.io.getStdOut().writer();
 
-    const input = try parse_args();
+    const input = try parseArgs();
 
     const file = try std.fs.cwd().openFile(input, .{});
     defer file.close();
