@@ -58,7 +58,7 @@ const LocationLists = struct {
         };
     }
 
-    fn deinit(self: *Self) void {
+    fn deinit(self: Self) void {
         self.left.deinit();
         self.right.deinit();
     }
@@ -137,8 +137,6 @@ pub fn main() !void {
     }
     location_lists.sort();
     const distance = location_lists.totalDistance();
-    try stdout.print("{d}\n", .{distance});
-
     const similarity_score = try location_lists.totalSimilarityScore();
-    try stdout.print("{d}\n", .{similarity_score});
+    try stdout.print("part one: {d}\npart two: {d}\n", .{ distance, similarity_score });
 }
