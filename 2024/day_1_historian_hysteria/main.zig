@@ -73,7 +73,7 @@ const LocationLists = struct {
         std.mem.sort(LocationID, self.right.items, {}, std.sort.asc(LocationID));
     }
 
-    fn total_distance(self: Self) usize {
+    fn totalDistance(self: Self) usize {
         var d: usize = 0;
         for (self.left.items, 0..) |left, i| {
             const right = self.right.items[i];
@@ -82,7 +82,7 @@ const LocationLists = struct {
         return d;
     }
 
-    fn total_similarity_score(self: Self) !usize {
+    fn totalSimilarityScore(self: Self) !usize {
         var right_counts = std.AutoHashMap(LocationID, usize).init(self.allocator);
         defer right_counts.deinit();
 
@@ -136,9 +136,9 @@ pub fn main() !void {
         try location_lists.addLocations(numbers.left, numbers.right);
     }
     location_lists.sort();
-    const distance = location_lists.total_distance();
+    const distance = location_lists.totalDistance();
     try stdout.print("{d}\n", .{distance});
 
-    const similarity_score = try location_lists.total_similarity_score();
+    const similarity_score = try location_lists.totalSimilarityScore();
     try stdout.print("{d}\n", .{similarity_score});
 }
