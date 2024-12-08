@@ -130,7 +130,7 @@ pub fn main() !void {
     var location_lists = LocationLists.init(allocator);
     defer location_lists.deinit();
 
-    var it = std.mem.splitScalar(u8, buffer, '\n');
+    var it = std.mem.tokenizeScalar(u8, buffer, '\n');
     while (it.next()) |line| {
         const numbers = parseLine(line);
         try location_lists.addLocations(numbers.left, numbers.right);
