@@ -12,6 +12,16 @@ let parse_args () =
         Error "file is a directory"
       else Ok input_file
 
+let sum_of_valid_games games =
+  let bag = Game.Counts { r = 12; g = 13; b = 14 } in
+  List.fold games ~init:0 ~f:(fun sum game ->
+      if Game.is_valid_with_handful game bag then sum + game.id else sum)
+
+let sum_of_game_powers games =
+  List.fold games ~init:0 ~f:(fun sum game ->
+      let power = Game.power @@ Game.minimum_counts_required game in
+      sum + power)
+
 let () =
   match parse_args () with
   | Error err ->
@@ -26,8 +36,7 @@ let () =
           Stdio.print_endline err;
           Stdlib.exit 1
       | Ok games ->
-          let score =
-            List.fold games ~init:0 ~f:(fun sum game ->
-                sum + (Game.power @@ Game.minimum_counts_required game))
-          in
-          Stdlib.Format.printf "%d\n" score)
+          let part_one = sum_of_valid_games games in
+          let part_two = sum_of_game_powers games in
+          Stdlib.Format.printf "part one = %d\npart two = %d\n" part_one
+            part_two)

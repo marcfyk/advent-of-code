@@ -17,4 +17,9 @@ let minimum_counts_required { id = _; handfuls } =
       Counts { r = max acc.r c.r; g = max acc.g c.g; b = max acc.b c.b })
   |> Option.value ~default:(Counts { r = 0; g = 0; b = 0 })
 
+let is_valid_with_handful { id = _; handfuls } (Counts bag) =
+  not
+  @@ List.exists handfuls ~f:(fun (Counts { r; g; b }) ->
+         r > bag.r || g > bag.g || b > bag.b)
+
 let power (Counts { r; g; b }) = r * g * b
