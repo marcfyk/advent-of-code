@@ -1,22 +1,23 @@
 open Base
 
-type digit =
-  { spelling : string
-  ; reverse_spelling : string
-  }
+type match_policy =
+  | Numeric
+  | NumericAndSpelling
 
-let new_digit spelling = { spelling; reverse_spelling = String.rev spelling }
-let zero = new_digit "zero"
-let one = new_digit "one"
-let two = new_digit "two"
-let three = new_digit "three"
-let four = new_digit "four"
-let five = new_digit "five"
-let six = new_digit "six"
-let seven = new_digit "seven"
-let eight = new_digit "eight"
-let nine = new_digit "nine"
-let all_digits = [| zero; one; two; three; four; five; six; seven; eight; nine |]
+type search_order =
+  | Forward
+  | Reverse
+
+let digits =
+  [ "zero"; "one"; "two"; "three"; "four"; "five"; "six"; "seven"; "eight"; "nine" ]
+;;
+
+let reverse_digits = List.map digits ~f:String.rev
+
+let digit_spellings = function
+  | Forward -> digits
+  | Reverse -> reverse_digits
+;;
 
 let parse_args () =
   let args = Sys.get_argv () in
@@ -31,68 +32,58 @@ let parse_args () =
     else Ok input_file
 ;;
 
-let does_prefix_match index string prefix =
-  let str_length = String.length string in
-  let prefix_length = String.length prefix in
-  if str_length - index < prefix_length
-  then false
-  else
-    Sequence.init prefix_length ~f:(fun i -> Char.equal string.[index + i] prefix.[i])
-    |> Sequence.for_all ~f:Fn.id
+let match_digit char =
+  if Char.is_digit char
+  then (
+    let ascii = Char.to_int char in
+    let offset = Char.to_int '0' in
+    Some (ascii - offset))
+  else None
 ;;
 
-let does_suffix_match index string suffix =
-  let suffix_length = String.length suffix in
-  if index + 1 < suffix_length
-  then false
-  else
-    Sequence.init suffix_length ~f:(fun i -> Char.equal string.[index - i] suffix.[i])
-    |> Sequence.for_all ~f:Fn.id
+let match_single_spelling spelling index line =
+  let spelling_length = String.length spelling in
+  let in_range = index >= 0 && index + spelling_length - 1 < String.length line in
+  match in_range with
+  | false -> false
+  | true ->
+    List.init spelling_length ~f:(fun i -> Char.equal line.[index + i] spelling.[i])
+    |> List.for_all ~f:Fn.id
 ;;
 
-let get_first_number line =
-  let rec find index =
-    if index >= String.length line
-    then None
-    else if Char.is_digit line.[index]
-    then Some (Char.to_int line.[index] - Char.to_int '0')
-    else (
-      let check value digit =
-        if does_prefix_match index line digit.spelling then Some value else None
-      in
-      match Array.find_mapi all_digits ~f:check with
-      | Some value -> Some value
-      | None -> find (index + 1))
+let match_any_spelling spellings index line =
+  List.find_mapi spellings ~f:(fun value spelling ->
+    if match_single_spelling spelling index line then Some value else None)
+;;
+
+let get_number policy order line =
+  let spellings = digit_spellings order in
+  let match_number =
+    match policy with
+    | Numeric -> fun index -> match_digit line.[index]
+    | NumericAndSpelling ->
+      fun index ->
+        (match match_digit line.[index] with
+         | Some _ as result -> result
+         | None -> match_any_spelling spellings index line)
   in
-  find 0
+  Sequence.init (String.length line) ~f:Fn.id |> Sequence.find_map ~f:match_number
 ;;
 
-let get_last_number line =
-  let rec find index =
-    if index < 0
-    then None
-    else if Char.is_digit line.[index]
-    then Some (Char.to_int line.[index] - Char.to_int '0')
-    else (
-      let check value digit =
-        if does_suffix_match index line digit.reverse_spelling then Some value else None
-      in
-      match Array.find_mapi all_digits ~f:check with
-      | Some value -> Some value
-      | None -> find (index - 1))
-  in
-  find (String.length line - 1)
-;;
-
-let compute_calibration_value first last = (first * 10) + last
-
-let get_calibration_value line =
-  match get_first_number line with
+let get_calibration_value policy line =
+  match get_number policy Forward line with
   | None -> None
   | Some first ->
-    (match get_last_number line with
+    (match get_number policy Reverse (String.rev line) with
      | None -> None
-     | Some last -> Some (compute_calibration_value first last))
+     | Some last -> Some ((first * 10) + last))
+;;
+
+let calibration_sum policy lines =
+  let f acc line =
+    get_calibration_value policy line |> Option.value ~default:0 |> ( + ) acc
+  in
+  List.fold lines ~init:0 ~f
 ;;
 
 let () =
@@ -102,9 +93,7 @@ let () =
     Stdlib.exit 1
   | Ok f ->
     let lines = Stdio.In_channel.read_lines f in
-    let result =
-      List.fold lines ~init:0 ~f:(fun acc line ->
-        get_calibration_value line |> Option.value ~default:0 |> ( + ) acc)
-    in
-    Stdlib.Format.printf "%d\n" result
+    let part_one = calibration_sum Numeric lines in
+    let part_two = calibration_sum NumericAndSpelling lines in
+    Stdlib.Format.printf "part one = %d\npart two = %d\n" part_one part_two
 ;;
