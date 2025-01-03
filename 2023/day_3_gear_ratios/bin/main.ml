@@ -12,13 +12,26 @@ let parse_args () =
         Error "file is a directory"
       else Ok input_file
 
+let sum_of_parts (parts : Game.Part.t list) =
+  List.fold parts ~init:0 ~f:(fun sum part ->
+      let part_sum = List.fold part.adjacent_numbers ~init:0 ~f:( + ) in
+      sum + part_sum)
+
+let sum_of_gear_ratios (parts : Game.Part.t list) =
+  List.fold parts ~init:0 ~f:(fun sum part ->
+      match Game.Part.gear_ratio part with
+      | None -> sum
+      | Some ratio -> sum + ratio)
+
 let () =
   match parse_args () with
   | Error err -> Stdio.print_endline err
   | Ok f -> (
       let lines = Stdio.In_channel.read_lines f |> List.to_array in
-      let game = Game.init lines in
-      let total = Result.map game ~f:Game.get_total_numbers in
-      match total with
-      | Ok n -> Stdio.printf "%d\n" n
-      | Error err -> Stdio.print_endline err)
+      match Game.init lines with
+      | Error err -> Stdio.print_endline err
+      | Ok game ->
+          let parts = Game.get_parts game in
+          let part_one = sum_of_parts parts in
+          let part_two = sum_of_gear_ratios parts in
+          Stdio.printf "part_one = %d\npart_two = %d\n" part_one part_two)

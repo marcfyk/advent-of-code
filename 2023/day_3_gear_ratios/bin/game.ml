@@ -2,6 +2,17 @@ open Base
 
 type t = { schematics : string array; visited : bool array }
 
+module Part = struct
+  type t = { symbol : char; adjacent_numbers : int list }
+
+  let init ~symbol ~adjacent_numbers = { symbol; adjacent_numbers }
+
+  let gear_ratio t =
+    match t.adjacent_numbers with
+    | [ first; second ] -> Some (first * second)
+    | _ -> None
+end
+
 let init schematics =
   let rows = Array.length schematics in
   if rows <= 0 then Error "empty input"
@@ -74,19 +85,12 @@ let get_adjacent_numbers t x y =
        | x, y when not @@ Char.is_digit (get t x y) -> None
        | x, y -> Some (expand_number t x y))
 
-let get_gear_ratio t symbol_x symbol_y =
-  match get_adjacent_numbers t symbol_x symbol_y with
-  | [ first; second ] -> Some (gear_ratio first second)
-  | _ -> None
+let is_symbol c = Fn.non Char.is_digit c && not (Char.equal '.' c)
 
-let get_total_numbers t =
-  Array.foldi t.schematics ~init:0 ~f:(fun i acc s ->
-      let sum =
-        String.foldi s ~init:0 ~f:(fun j acc c ->
-            match c with
-            | '*' ->
-                let ratio = Option.value ~default:0 (get_gear_ratio t i j) in
-                acc + ratio
-            | _ -> acc)
-      in
-      acc + sum)
+let get_parts t =
+  Array.foldi t.schematics ~init:[] ~f:(fun i parts s ->
+      String.foldi s ~init:parts ~f:(fun j acc c ->
+          if is_symbol c then
+            let adj = get_adjacent_numbers t i j in
+            Part.init ~symbol:c ~adjacent_numbers:adj :: acc
+          else acc))
