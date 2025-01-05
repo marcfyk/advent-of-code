@@ -1,0 +1,5 @@
+(executable
+ (public_name day_4_scratch_cards)
+ (name main)
+ (modules main parser scratch_card)
+ (libraries day_4_scratch_cards base stdio))
